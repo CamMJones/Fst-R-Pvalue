@@ -1,0 +1,43 @@
+#install.packages("vcfr")
+#install.packages("Rtools")
+
+
+library(vcfR)
+library(adegenet)
+library(StAMPP)
+
+setwd("C:/Users/Cam/OneDrive/Desktop/Ery_VCF_pop")
+
+vcf <- read.vcfR("Ery_Combined.vcf")
+gl <- vcfR2genlight(vcf)
+
+whaler <- readLines("whaler_Con.txt", warn = FALSE)
+mattole <- readLines("mattole_con.txt", warn = FALSE)
+fortbragg <- readLines("FortBragg_Con.txt", warn = FALSE)
+southmendocino <- readLines("SouthMendocino_con.txt", warn = FALSE)
+pointreyes <- readLines("PointReyes_con.txt", warn = FALSE)
+
+pop_map <- c(
+  setNames(rep("whaler", length(whaler)), whaler),
+  setNames(rep("mattole", length(mattole)), mattole),
+  setNames(rep("FortBragg", length(fortbragg)), fortbragg),
+  setNames(rep("SouthMendocino", length(southmendocino)), southmendocino),
+  setNames(rep("PointReyes", length(pointreyes)), pointreyes)
+)
+
+keep <- indNames(gl) %in% names(pop_map)
+gl5 <- gl[keep]
+
+pop(gl5) <- pop_map[indNames(gl5)]
+pop(gl5) <- factor(as.character(pop(gl5)))
+
+res <- stamppFst(gl5, nboots = 1000, percent = 95, nclusters = 1)
+
+res$Bootstraps
+
+res$Fsts
+res$Pvalues
+
+write.csv(res$Fsts, "con_pairwise_FST_matrix.csv")
+write.csv(res$Pvalues, "con_pairwise_FST_pvalues.csv")
+
